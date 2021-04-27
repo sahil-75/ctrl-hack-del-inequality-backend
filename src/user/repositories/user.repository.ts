@@ -1,19 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { LeanDocument, Model } from 'mongoose';
-import { Observable, from } from 'rxjs';
 import { User, UserDocument } from '../models/user.schema';
 
 @Injectable()
 export class UserRepository {
 	constructor(
-		@InjectModel(User.name) private userModel: Model<UserDocument>,
+		@InjectModel(User.name) private userModel: Model<UserDocument>
 	) {}
 
 	addUser(
 		email: string,
 		name: string,
-		password: string,
+		password: string
 	): Promise<UserDocument> {
 		const user = new this.userModel({
 			email,

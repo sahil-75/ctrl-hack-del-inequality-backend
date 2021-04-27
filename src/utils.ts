@@ -7,7 +7,7 @@ export const throwHttpException = (status: HttpStatus, error: string) => {
 			status,
 			error,
 		},
-		status,
+		status
 	);
 };
 

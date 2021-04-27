@@ -10,7 +10,7 @@ import { UserModule } from './user/user.module';
 			{
 				useNewUrlParser: true,
 				useUnifiedTopology: true,
-			},
+			}
 		),
 		UserModule,
 	],
