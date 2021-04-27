@@ -25,6 +25,7 @@ module.exports = {
 			{
 				endOfLine: 'auto',
 				useTabs: true,
+				trailingComma: 'es5',
 			},
 		],
 	},
