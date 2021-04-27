@@ -4,14 +4,16 @@ export interface ILoginBody {
 }
 
 export interface IResponse {
-	status: number;
+	statusCode: number;
 	message: string;
 	accessToken?: string;
 }
 
 export interface ILoginResponse extends IResponse {
-	name: string;
-	email: string;
+	details: {
+		name: string;
+		email: string;
+	};
 }
 
 export interface ISignUpBody extends ILoginBody {

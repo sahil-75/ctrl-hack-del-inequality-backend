@@ -32,7 +32,7 @@ export class UserService {
 		}
 
 		return {
-			status: HttpStatus.CREATED,
+			statusCode: HttpStatus.CREATED,
 			message: USER_CONST.OPERATION_SUCCESS,
 		};
 	}
@@ -58,11 +58,13 @@ export class UserService {
 		}
 		const token = await this.generateJWTToken({ id: user.id });
 		return {
-			name: user.name,
-			email: user.email,
-			status: HttpStatus.OK,
+			statusCode: HttpStatus.OK,
 			message: USER_CONST.LOGIN_SUCCESS,
 			accessToken: token,
+			details: {
+				name: user.name,
+				email: user.email,
+			},
 		};
 	}
 
