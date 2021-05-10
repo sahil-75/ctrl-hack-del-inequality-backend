@@ -1,4 +1,11 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import {
+	Get,
+	Body,
+	Post,
+	Controller,
+	HttpCode,
+	HttpStatus,
+} from '@nestjs/common';
 import { UserService } from '../services/user.service';
 import { ILoginBody, IResponse, ISignUpBody } from '../user.inteface';
 
@@ -15,5 +22,10 @@ export class UserController {
 	@Post('signup')
 	createUser(@Body() body: ISignUpBody): Promise<IResponse> {
 		return this.userService.createUser(body);
+	}
+
+	@Get('')
+	getUsers(@Body() body: ISignUpBody): Promise<IResponse> {
+		return this.userService.getUsers(body);
 	}
 }
