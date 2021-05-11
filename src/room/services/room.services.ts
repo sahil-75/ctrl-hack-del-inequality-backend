@@ -23,8 +23,6 @@ export class RoomService {
 
 			const { users: roomUsers } = this.getUsersInRoom(room);
 
-			console.log(roomUsers);
-
 			const isDomainCorrect = roomUsers.length
 				? roomUsers[0].domain === domain
 				: true;
@@ -42,8 +40,6 @@ export class RoomService {
 			const user = { name, room, domain, ...rest };
 
 			users.push(user);
-
-			console.log(users);
 			return { user };
 		} catch (error) {
 			return { error: error.message };
@@ -83,7 +79,7 @@ export class RoomService {
 	};
 
 	getRooms = (domain: string) => {
-		const filteredUsers = this.domainUsers(domain);
+		const filteredUsers = domain ? this.domainUsers(domain) : users;
 
 		const roomIds = [
 			...new Set(filteredUsers.map((user: User) => user.room)),
@@ -91,7 +87,7 @@ export class RoomService {
 
 		return roomIds.map((room: string) => ({
 			room,
-			users: this.getUsersInRoom(room),
+			users: this.getUsersInRoom(room).users,
 		}));
 	};
 }

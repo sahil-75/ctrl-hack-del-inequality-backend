@@ -25,6 +25,12 @@ export class AppGateway
 		client.emit('issue', { on, message });
 	}
 
+	private emitRooms(domain: string) {
+		const rooms = roomService.getRooms(domain);
+
+		this.server.to(domain).emit('rooms', rooms);
+	}
+
 	afterInit() {
 		this.logger.log('WebSocket up and running');
 	}
@@ -42,8 +48,10 @@ export class AppGateway
 
 			client.disconnect();
 		}
+		const domain = email.split('@')[1];
+		client.join(domain);
 
-		this.server.emit('rooms', roomService.getRooms(email.split('@')[1]));
+		this.emitRooms(domain);
 	}
 
 	@SubscribeMessage('join')
@@ -68,6 +76,7 @@ export class AppGateway
 			}
 
 			client.join(user.room);
+			client.join(user.domain);
 
 			client.emit('message', {
 				user: { name: 'bot' },
@@ -88,7 +97,7 @@ export class AppGateway
 
 			this.logger.log(`${email} joined room ${room}`);
 
-			this.server.emit('rooms', roomService.getRooms(user.domain));
+			this.emitRooms(user.domain);
 		} catch (error) {
 			console.trace(error);
 		}
@@ -143,7 +152,7 @@ export class AppGateway
 					users: users,
 				});
 
-				this.server.emit('rooms', roomService.getRooms(user.domain));
+				this.emitRooms(user.domain);
 			}
 		} catch (error) {
 			console.trace(error);
