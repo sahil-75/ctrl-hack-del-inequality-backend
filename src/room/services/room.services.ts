@@ -4,26 +4,46 @@ type User = {
 	id: string;
 	name: string;
 	room: string;
+	email: string;
+	domain: string;
 	clientId: string;
 };
 
 export class RoomService {
-	addUser = ({ id, clientId, name = '', room = '' }: User): any => {
+	domainUsers = (domain: string) =>
+		users.filter((user: User) => user.domain === domain);
+
+	addUser = ({ name = '', room = '', domain, ...rest }: User): any => {
 		try {
 			name = name.trim().toLowerCase();
 			room = room.trim().toLowerCase();
+			domain = domain.trim().toLowerCase();
+
+			if (!name || !room) return { error: 'Room name required' };
+
+			const { users: roomUsers } = this.getUsersInRoom(room);
+
+			console.log(roomUsers);
+
+			const isDomainCorrect = roomUsers.length
+				? roomUsers[0].domain === domain
+				: true;
+
+			if (!isDomainCorrect) {
+				return { error: 'This room is from different domain' };
+			}
 
 			const existingUser = users.find(
 				(user: User) => user.room === room && user.name === name
 			);
 
-			if (!name || !room) return { error: 'Room name required' };
-
 			if (existingUser) return { error: 'User already exists in room' };
 
-			const user = { id, name, room, clientId };
+			const user = { name, room, domain, ...rest };
 
 			users.push(user);
+
+			console.log(users);
 			return { user };
 		} catch (error) {
 			return { error: error.message };
@@ -34,7 +54,7 @@ export class RoomService {
 		try {
 			const index = users.findIndex((user: User) => user.clientId === id);
 
-			if (index !== -1) return users.splice(index, 1)[0];
+			if (index !== -1) return { user: users.splice(index, 1)[0] };
 		} catch (error) {
 			return { error: error.message };
 		}
@@ -42,7 +62,13 @@ export class RoomService {
 
 	getUser = (id: string) => {
 		try {
-			return users.find((user: User) => user.clientId === id);
+			const user = users.find((user: User) => user.clientId === id);
+
+			if (!user) {
+				return { error: 'User not flund' };
+			}
+
+			return { user };
 		} catch (error) {
 			return { error: error.message };
 		}
@@ -50,16 +76,18 @@ export class RoomService {
 
 	getUsersInRoom = (room: string) => {
 		try {
-			return users.filter((user: User) => user.room === room);
+			return { users: users.filter((user: User) => user.room === room) };
 		} catch (error) {
 			return { error: error.message };
 		}
 	};
 
-	getRooms = () => {
-		const roomIds = [...new Set(users.map((user: User) => user.room))];
+	getRooms = (domain: string) => {
+		const filteredUsers = this.domainUsers(domain);
 
-		console.log(roomIds, users);
+		const roomIds = [
+			...new Set(filteredUsers.map((user: User) => user.room)),
+		];
 
 		return roomIds.map((room: string) => ({
 			room,

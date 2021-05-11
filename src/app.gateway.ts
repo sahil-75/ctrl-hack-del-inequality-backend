@@ -21,66 +21,132 @@ export class AppGateway
 
 	private logger: Logger = new Logger('AppGateway');
 
+	private emitError(client: Socket, on: string, message: string) {
+		client.emit('issue', { on, message });
+	}
+
 	afterInit() {
 		this.logger.log('WebSocket up and running');
 	}
 
-	@SubscribeMessage('join')
-	joinHandler(client: any, payload: any, callback: any): string {
-		try {
-			const { user: { name = '', id = '' } = {}, room } = payload;
+	@SubscribeMessage('init')
+	initHandler(client: Socket, payload: any) {
+		const { email } = payload;
 
-			console.log(`${name} joined room ${room}`);
+		if (!email) {
+			this.emitError(
+				client,
+				'init',
+				'Email address not provided for initialization, disconnecting client'
+			);
+
+			client.disconnect();
+		}
+
+		this.server.emit('rooms', roomService.getRooms(email.split('@')[1]));
+	}
+
+	@SubscribeMessage('join')
+	joinHandler(client: any, payload: any) {
+		try {
+			const {
+				user: { name = '', id = '', email = '' } = {},
+				room,
+			} = payload;
 
 			const { error, user } = roomService.addUser({
+				domain: email.split('@')[1],
 				clientId: client.id,
+				email,
 				name,
 				room,
 				id,
 			});
 
-			if (error && callback) return callback(error);
+			if (error) {
+				return this.emitError(client, 'join', error);
+			}
 
 			client.join(user.room);
 
 			client.emit('message', {
-				user: 'bot',
+				user: { name: 'bot' },
 				text: `${user.name}, welcome to room ${user.room}.`,
 			});
 
 			client.broadcast.to(user.room).emit('message', {
-				user: 'bot',
+				user: { name: 'bot' },
 				text: `${user.name} has joined!`,
 			});
 
+			const { users = [] } = roomService.getUsersInRoom(user.room);
+
 			this.server.to(user.room).emit('roomData', {
 				room: user.room,
-				users: roomService.getUsersInRoom(user.room),
+				users: users,
 			});
 
-			this.server.emit('rooms', roomService.getRooms());
+			this.logger.log(`${email} joined room ${room}`);
 
-			callback && callback();
+			this.server.emit('rooms', roomService.getRooms(user.domain));
 		} catch (error) {
-			console.error(error);
-			callback && callback(error);
+			console.trace(error);
 		}
 	}
 
 	@SubscribeMessage('sendMessage')
-	sendMessageHandler(client: any, payload: any): string {
-		// TODO
-		client.emit('message', payload.test);
-		return payload + 'Hello world!';
+	sendMessageHandler(client: any, payload: any) {
+		try {
+			const { message, timestamp } = payload;
+
+			const { error, user } = roomService.getUser(client.id);
+
+			if (error) {
+				return this.emitError(client, 'sendMessage', error);
+			}
+
+			const { room, ...rest } = user;
+
+			this.server.to(room).emit('message', {
+				text: message,
+				user: rest,
+				timestamp,
+			});
+
+			this.logger.log(`${message} sent at ${timestamp}`);
+		} catch (error) {
+			console.trace(error);
+		}
 	}
 
 	handleConnection(client: Socket, ...args: any[]) {
 		this.logger.log(`Client connected: ${client.id} `, ...args);
-
-		this.server.emit('rooms', roomService.getRooms());
 	}
 
 	handleDisconnect(client: Socket) {
-		this.logger.log(`Client disconnected: ${client.id} `);
+		try {
+			this.logger.log(`Client disconnected: ${client.id} `);
+
+			const { user } = roomService.removeUser(client.id) ?? {};
+
+			if (user) {
+				this.server.to(user.room).emit('message', {
+					user: { name: 'bot' },
+					text: `${user.name} has left.`,
+				});
+
+				const { users = [] } = roomService.getUsersInRoom(user.room);
+
+				this.server.to(user.room).emit('roomData', {
+					room: user.room,
+					message: `${user.name} left!`,
+					users: users,
+				});
+
+				this.server.emit('rooms', roomService.getRooms(user.domain));
+			}
+		} catch (error) {
+			console.trace(error);
+		}
 	}
 }
