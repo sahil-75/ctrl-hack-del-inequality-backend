@@ -1,11 +1,17 @@
+import { LeanDocument } from 'mongoose';
+import { UserDocument } from './models/user.schema';
+
 export interface ILoginBody {
 	email: string;
 	password: string;
 }
 
-export interface IResponse {
+export interface CommonResponse {
 	statusCode: number;
 	message: string;
+}
+
+export interface IResponse extends CommonResponse {
 	accessToken?: string;
 }
 
@@ -18,4 +24,8 @@ export interface ILoginResponse extends IResponse {
 
 export interface ISignUpBody extends ILoginBody {
 	name: string;
+}
+
+export interface IUsersResponse extends CommonResponse {
+	users: LeanDocument<UserDocument[]>;
 }

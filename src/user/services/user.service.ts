@@ -10,7 +10,12 @@ import { compareWithHash, generateHash } from 'src/utils';
 import { UserDocument } from '../models/user.schema';
 import { UserRepository } from '../repositories/user.repository';
 import { USER_CONST } from '../user.contants';
-import { ILoginResponse, IResponse, ISignUpBody } from '../user.inteface';
+import {
+	IResponse,
+	ISignUpBody,
+	IUsersResponse,
+	ILoginResponse,
+} from '../user.inteface';
 
 @Injectable()
 export class UserService {
@@ -18,6 +23,20 @@ export class UserService {
 		private jwtService: JwtService,
 		private userRepository: UserRepository
 	) {}
+
+	async getUsers({}): Promise<IUsersResponse> {
+		try {
+			const users = await this.userRepository.findUser();
+
+			return {
+				statusCode: HttpStatus.CREATED,
+				message: USER_CONST.OPERATION_SUCCESS,
+				users,
+			};
+		} catch {
+			throw new BadRequestException(USER_CONST.EMAIL_EXISTS);
+		}
+	}
 
 	async createUser({
 		name,
