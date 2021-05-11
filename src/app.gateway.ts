@@ -9,9 +9,9 @@ import {
 import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 
-import { RoomService } from './room/services/room.services';
+import { RoomServer } from './room/room.server';
 
-const roomService = new RoomService();
+const roomServer = new RoomServer();
 
 @WebSocketGateway()
 export class AppGateway
@@ -26,7 +26,7 @@ export class AppGateway
 	}
 
 	private emitRooms(domain: string) {
-		const rooms = roomService.getRooms(domain);
+		const rooms = roomServer.getRooms(domain);
 
 		this.server.to(domain).emit('rooms', rooms);
 	}
@@ -62,7 +62,7 @@ export class AppGateway
 				room,
 			} = payload;
 
-			const { error, user } = roomService.addUser({
+			const { error, user } = roomServer.addUser({
 				domain: email.split('@')[1],
 				clientId: client.id,
 				email,
@@ -88,7 +88,7 @@ export class AppGateway
 				text: `${user.name} has joined!`,
 			});
 
-			const { users = [] } = roomService.getUsersInRoom(user.room);
+			const { users = [] } = roomServer.getUsersInRoom(user.room);
 
 			this.server.to(user.room).emit('roomData', {
 				room: user.room,
@@ -108,7 +108,7 @@ export class AppGateway
 		try {
 			const { message, timestamp } = payload;
 
-			const { error, user } = roomService.getUser(client.id);
+			const { error, user } = roomServer.getUser(client.id);
 
 			if (error) {
 				return this.emitError(client, 'sendMessage', error);
@@ -136,7 +136,7 @@ export class AppGateway
 		try {
 			this.logger.log(`Client disconnected: ${client.id} `);
 
-			const { user } = roomService.removeUser(client.id) ?? {};
+			const { user } = roomServer.removeUser(client.id) ?? {};
 
 			if (user) {
 				this.server.to(user.room).emit('message', {
@@ -144,7 +144,7 @@ export class AppGateway
 					text: `${user.name} has left.`,
 				});
 
-				const { users = [] } = roomService.getUsersInRoom(user.room);
+				const { users = [] } = roomServer.getUsersInRoom(user.room);
 
 				this.server.to(user.room).emit('roomData', {
 					room: user.room,

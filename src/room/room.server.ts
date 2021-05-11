@@ -9,7 +9,7 @@ type User = {
 	clientId: string;
 };
 
-export class RoomService {
+export class RoomServer {
 	domainUsers = (domain: string) =>
 		users.filter((user: User) => user.domain === domain);
 
