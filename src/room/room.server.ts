@@ -13,13 +13,13 @@ export class RoomServer {
 	domainUsers = (domain: string) =>
 		users.filter((user: User) => user.domain === domain);
 
-	addUser = ({ name = '', room = '', domain, ...rest }: User): any => {
+	addUser = ({ room = '', email, domain, ...rest }: User): any => {
 		try {
-			name = name.trim().toLowerCase();
 			room = room.trim().toLowerCase();
+			email = email.trim().toLowerCase();
 			domain = domain.trim().toLowerCase();
 
-			if (!name || !room) return { error: 'Room name required' };
+			if (!email || !room) return { error: 'Room name required' };
 
 			const { users: roomUsers } = this.getUsersInRoom(room);
 
@@ -32,12 +32,12 @@ export class RoomServer {
 			}
 
 			const existingUser = users.find(
-				(user: User) => user.room === room && user.name === name
+				(user: User) => user.room === room && user.email === email
 			);
 
 			if (existingUser) return { error: 'User already exists in room' };
 
-			const user = { name, room, domain, ...rest };
+			const user = { email, room, domain, ...rest };
 
 			users.push(user);
 			return { user };
@@ -61,7 +61,7 @@ export class RoomServer {
 			const user = users.find((user: User) => user.clientId === id);
 
 			if (!user) {
-				return { error: 'User not flund' };
+				return { error: 'User not found' };
 			}
 
 			return { user };
