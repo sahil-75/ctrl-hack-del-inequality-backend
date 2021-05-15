@@ -1,5 +1,6 @@
 import { LeanDocument } from 'mongoose';
 import { UserDocument } from './models/user.schema';
+import { Roles } from './roles.enum';
 
 export interface ILoginBody {
 	email: string;
@@ -24,8 +25,16 @@ export interface ILoginResponse extends IResponse {
 
 export interface ISignUpBody extends ILoginBody {
 	name: string;
+	role: Roles;
 }
 
 export interface IUsersResponse extends CommonResponse {
 	users: LeanDocument<UserDocument[]>;
+}
+
+export interface IUpdateUser {
+	name?: string;
+	email: string;
+	password?: string;
+	role?: Roles;
 }

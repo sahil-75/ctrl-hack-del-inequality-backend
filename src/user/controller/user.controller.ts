@@ -1,13 +1,23 @@
 import {
 	Get,
-	Body,
 	Post,
+	Put,
+	Req,
+	Body,
 	Controller,
 	HttpCode,
+	UseGuards,
 	HttpStatus,
 } from '@nestjs/common';
 import { UserService } from '../services/user.service';
-import { ILoginBody, IResponse, ISignUpBody } from '../user.inteface';
+import {
+	ILoginBody,
+	IResponse,
+	ISignUpBody,
+	IUpdateUser,
+} from '../user.inteface';
+import { AuthGuard } from '../auth/auth.guard';
+import { Request } from 'express';
 
 @Controller('user')
 export class UserController {
@@ -19,13 +29,33 @@ export class UserController {
 		return this.userService.login(body.email, body.password);
 	}
 
+	@UseGuards(AuthGuard)
 	@Post('signup')
-	createUser(@Body() body: ISignUpBody): Promise<IResponse> {
-		return this.userService.createUser(body);
+	createUser(
+		@Body() body: ISignUpBody,
+		@Req() req: Request
+	): Promise<IResponse> {
+		return this.userService.createUser(body, (req as any).userId);
 	}
 
 	@Get('')
 	getUsers(@Body() body: ISignUpBody): Promise<IResponse> {
 		return this.userService.getUsers(body);
 	}
+
+	@UseGuards(AuthGuard)
+	@Put()
+	@HttpCode(HttpStatus.OK)
+	updateUser(@Body() body: IUpdateUser): Promise<IResponse> {
+		return this.userService.updateUser(body);
+	}
+
+	// @UseGuards(AuthGuard)
+	// @Get('/:email')
+	// getChatList(
+	// 	@Param('email') email: string,
+	// 	@Req() req
+	// ): Promise<any> {
+	// 	return this.userService.getChat(email, req.userId);
+	// }
 }
