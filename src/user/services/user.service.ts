@@ -6,15 +6,16 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { LeanDocument } from 'mongoose';
-import { compareWithHash, generateHash } from 'src/utils';
+import { compareWithHash, generateHash, verifyAndGetDomain } from 'src/utils';
 import { UserDocument } from '../models/user.schema';
 import { UserRepository } from '../repositories/user.repository';
 import { USER_CONST } from '../user.contants';
 import {
-	IResponse,
-	ISignUpBody,
 	IUsersResponse,
 	ILoginResponse,
+	IResponse,
+	ISignUpBody,
+	IUpdateUser,
 } from '../user.inteface';
 
 @Injectable()
@@ -38,16 +39,24 @@ export class UserService {
 		}
 	}
 
-	async createUser({
-		name,
-		email,
-		password,
-	}: ISignUpBody): Promise<IResponse> {
+	async createUser(body: ISignUpBody, adminId: string): Promise<IResponse> {
+		const { name, email, password, role } = body;
 		const hashedPassword = await generateHash(password);
+		const admin = await this.userRepository.findUserByID(adminId);
+		const orgID = verifyAndGetDomain(admin.email, email);
+		if (!orgID) {
+			throw new BadRequestException(USER_CONST.MUST_BE_SAME_ORG);
+		}
 		try {
-			await this.userRepository.addUser(email, name, hashedPassword);
+			await this.userRepository.addUser(
+				email,
+				name,
+				hashedPassword,
+				role,
+				orgID
+			);
 		} catch {
-			throw new BadRequestException(USER_CONST.EMAIL_EXISTS);
+			throw new BadRequestException();
 		}
 
 		return {
@@ -75,7 +84,7 @@ export class UserService {
 		if (!isCorrectPassword) {
 			throw new UnauthorizedException();
 		}
-		const token = await this.generateJWTToken({ id: user.id });
+		const token = await this.generateJWTToken({ id: user._id });
 		return {
 			statusCode: HttpStatus.OK,
 			message: USER_CONST.LOGIN_SUCCESS,
@@ -84,6 +93,28 @@ export class UserService {
 				name: user.name,
 				email: user.email,
 			},
+		};
+	}
+
+	async updateUser({
+		email,
+		name,
+		password,
+		role,
+	}: IUpdateUser): Promise<IResponse> {
+		const user = await this.userRepository.findUserByEmailNonLean(email);
+		name && (user.name = name);
+		role && (user.role = role);
+		password && (user.password = await generateHash(password));
+		try {
+			await user.save();
+		} catch (err) {
+			console.error(err);
+			throw new BadRequestException();
+		}
+		return {
+			statusCode: HttpStatus.OK,
+			message: USER_CONST.OPERATION_SUCCESS,
 		};
 	}
 
