@@ -31,6 +31,27 @@ export class AppGateway
 		this.server.to(domain).emit('rooms', rooms);
 	}
 
+	private leaveServer(client: Socket) {
+		const { user } = roomServer.removeUser(client.id) ?? {};
+
+		if (user) {
+			this.server.to(user.room).emit('message', {
+				user: { name: 'bot' },
+				text: `${user.name} has left.`,
+			});
+
+			const { users = [] } = roomServer.getUsersInRoom(user.room);
+
+			this.server.to(user.room).emit('roomData', {
+				room: user.room,
+				message: `${user.name} left!`,
+				users: users,
+			});
+
+			this.emitRooms(user.domain);
+		}
+	}
+
 	afterInit() {
 		this.logger.log('WebSocket up and running');
 	}
@@ -103,6 +124,19 @@ export class AppGateway
 		}
 	}
 
+	@SubscribeMessage('leave')
+	leaveHandler(client: any, payload: any) {
+		try {
+			const { room } = payload;
+
+			this.leaveServer(client);
+
+			client.leave(room);
+		} catch (error) {
+			console.trace(error);
+		}
+	}
+
 	@SubscribeMessage('sendMessage')
 	sendMessageHandler(client: any, payload: any) {
 		try {
@@ -136,24 +170,7 @@ export class AppGateway
 		try {
 			this.logger.log(`Client disconnected: ${client.id} `);
 
-			const { user } = roomServer.removeUser(client.id) ?? {};
-
-			if (user) {
-				this.server.to(user.room).emit('message', {
-					user: { name: 'bot' },
-					text: `${user.name} has left.`,
-				});
-
-				const { users = [] } = roomServer.getUsersInRoom(user.room);
-
-				this.server.to(user.room).emit('roomData', {
-					room: user.room,
-					message: `${user.name} left!`,
-					users: users,
-				});
-
-				this.emitRooms(user.domain);
-			}
+			this.leaveServer(client);
 		} catch (error) {
 			console.trace(error);
 		}
