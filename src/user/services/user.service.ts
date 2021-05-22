@@ -126,4 +126,8 @@ export class UserService {
 	async generateJWTToken(payload: any): Promise<string> {
 		return this.jwtService.sign(payload);
 	}
+
+	async getUserById(id: string): Promise<UserDocument> {
+		return this.userRepository.findUserByID(id);
+	}
 }

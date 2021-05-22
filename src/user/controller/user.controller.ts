@@ -16,7 +16,7 @@ import {
 	ISignUpBody,
 	IUpdateUser,
 } from '../user.inteface';
-import { AuthGuard } from '../auth/auth.guard';
+import { AuthGuard } from 'src/auth/auth.guard';
 import { Request } from 'express';
 
 @Controller('user')
@@ -38,6 +38,7 @@ export class UserController {
 		return this.userService.createUser(body, (req as any).userId);
 	}
 
+	@UseGuards(AuthGuard)
 	@Get()
 	getUsers(): Promise<IResponse> {
 		return this.userService.getUsers();
@@ -52,13 +53,4 @@ export class UserController {
 	): Promise<IResponse> {
 		return this.userService.updateUser(body, (req as any).userId);
 	}
-
-	// @UseGuards(AuthGuard)
-	// @Get('/:email')
-	// getChatList(
-	// 	@Param('email') email: string,
-	// 	@Req() req
-	// ): Promise<any> {
-	// 	return this.userService.getChat(email, req.userId);
-	// }
 }
