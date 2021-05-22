@@ -3,6 +3,8 @@ import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UserModule } from './user/user.module';
 import { AppGateway } from './app.gateway';
+import { ChatModule } from './chat/chat.module';
+import { AuthModule } from './auth/auth.module';
 @Module({
 	imports: [
 		ConfigModule.forRoot(),
@@ -14,6 +16,8 @@ import { AppGateway } from './app.gateway';
 			}
 		),
 		UserModule,
+		ChatModule,
+		AuthModule,
 	],
 	providers: [AppGateway],
 })
