@@ -2,6 +2,7 @@ import {
 	BadRequestException,
 	HttpStatus,
 	Injectable,
+	InternalServerErrorException,
 	UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -25,17 +26,16 @@ export class UserService {
 		private userRepository: UserRepository
 	) {}
 
-	async getUsers({}): Promise<IUsersResponse> {
+	async getUsers(): Promise<IUsersResponse> {
 		try {
 			const users = await this.userRepository.findUser();
-
 			return {
-				statusCode: HttpStatus.CREATED,
+				statusCode: HttpStatus.OK,
 				message: USER_CONST.OPERATION_SUCCESS,
 				users,
 			};
 		} catch {
-			throw new BadRequestException(USER_CONST.EMAIL_EXISTS);
+			throw new InternalServerErrorException();
 		}
 	}
 
@@ -85,29 +85,34 @@ export class UserService {
 			throw new UnauthorizedException();
 		}
 		const token = await this.generateJWTToken({ id: user._id });
+		const { name, email, _id: id, role } = user;
 		return {
 			statusCode: HttpStatus.OK,
 			message: USER_CONST.LOGIN_SUCCESS,
 			accessToken: token,
 			details: {
-				name: user.name,
-				email: user.email,
+				name,
+				email,
+				id,
+				role,
 			},
 		};
 	}
 
-	async updateUser({
-		email,
-		name,
-		password,
-		role,
-	}: IUpdateUser): Promise<IResponse> {
-		const user = await this.userRepository.findUserByEmailNonLean(email);
-		name && (user.name = name);
-		role && (user.role = role);
-		password && (user.password = await generateHash(password));
+	async updateUser(body: IUpdateUser, id: string): Promise<IResponse> {
+		const readOnlyFields = new Set(['email', 'orgID', 'accessToken']);
+		const updates = Object.entries(body).reduce((all, [key, value]) => {
+			if (
+				value !== undefined &&
+				value !== null &&
+				!readOnlyFields.has(key)
+			) {
+				all[key] = value;
+			}
+			return all;
+		}, {} as IUpdateUser);
 		try {
-			await user.save();
+			await this.userRepository.updateOneByID(id, updates);
 		} catch (err) {
 			console.error(err);
 			throw new BadRequestException();

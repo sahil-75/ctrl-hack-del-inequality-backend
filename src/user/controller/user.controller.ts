@@ -38,16 +38,19 @@ export class UserController {
 		return this.userService.createUser(body, (req as any).userId);
 	}
 
-	@Get('')
-	getUsers(@Body() body: ISignUpBody): Promise<IResponse> {
-		return this.userService.getUsers(body);
+	@Get()
+	getUsers(): Promise<IResponse> {
+		return this.userService.getUsers();
 	}
 
 	@UseGuards(AuthGuard)
 	@Put()
 	@HttpCode(HttpStatus.OK)
-	updateUser(@Body() body: IUpdateUser): Promise<IResponse> {
-		return this.userService.updateUser(body);
+	updateUser(
+		@Body() body: IUpdateUser,
+		@Req() req: Request
+	): Promise<IResponse> {
+		return this.userService.updateUser(body, (req as any).userId);
 	}
 
 	// @UseGuards(AuthGuard)

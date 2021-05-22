@@ -20,6 +20,12 @@ export class User {
 
 	@Prop({ required: true })
 	role: Roles;
+
+	@Prop()
+	totalBreaktime?: number;
+
+	@Prop()
+	isInBreakRoom?: boolean;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
