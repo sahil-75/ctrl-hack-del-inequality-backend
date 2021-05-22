@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { LeanDocument, Model } from 'mongoose';
 import { User, UserDocument } from '../models/user.schema';
 import { Roles } from '../roles.enum';
+import { IUpdateUser } from '../user.inteface';
 
 @Injectable()
 export class UserRepository {
@@ -39,7 +40,13 @@ export class UserRepository {
 		return this.userModel.findOne({ email }).exec();
 	}
 
-	findUserByID(id: string): Promise<LeanDocument<UserDocument>> {
-		return this.userModel.findById(id).lean().exec();
+	findUserByID(id: string): Promise<UserDocument> {
+		return this.userModel.findById(id).exec();
+	}
+
+	updateOneByID(id: string, updates: IUpdateUser): Promise<UserDocument> {
+		return this.userModel
+			.findByIdAndUpdate(id, [{ $addFields: updates }])
+			.exec();
 	}
 }

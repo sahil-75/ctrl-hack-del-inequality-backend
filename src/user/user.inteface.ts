@@ -20,6 +20,8 @@ export interface ILoginResponse extends IResponse {
 	details: {
 		name: string;
 		email: string;
+		id: string;
+		role: string;
 	};
 }
 
@@ -34,7 +36,9 @@ export interface IUsersResponse extends CommonResponse {
 
 export interface IUpdateUser {
 	name?: string;
-	email: string;
 	password?: string;
 	role?: Roles;
+	isInBreakRoom?: boolean;
+	totalBreaktime?: number;
+	accessToken: string;
 }
