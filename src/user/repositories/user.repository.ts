@@ -32,8 +32,8 @@ export class UserRepository {
 		return this.userModel.findOne({ email }).lean().exec();
 	}
 
-	findUser(): Promise<LeanDocument<UserDocument[]>> {
-		return this.userModel.find({}).exec();
+	findUser(orgID: string): Promise<LeanDocument<UserDocument[]>> {
+		return this.userModel.find({ orgID }).exec();
 	}
 
 	findUserByEmailNonLean(email: string): Promise<UserDocument> {

@@ -40,8 +40,8 @@ export class UserController {
 
 	@UseGuards(AuthGuard)
 	@Get()
-	getUsers(): Promise<IResponse> {
-		return this.userService.getUsers();
+	getUsers(@Req() req: Request): Promise<IResponse> {
+		return this.userService.getUsers((req as any).userId);
 	}
 
 	@UseGuards(AuthGuard)

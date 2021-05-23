@@ -26,9 +26,10 @@ export class UserService {
 		private userRepository: UserRepository
 	) {}
 
-	async getUsers(): Promise<IUsersResponse> {
+	async getUsers(id: string): Promise<IUsersResponse> {
+		const currUser = await this.userRepository.findUserByID(id);
 		try {
-			const users = await this.userRepository.findUser();
+			const users = await this.userRepository.findUser(currUser.orgID);
 			return {
 				statusCode: HttpStatus.OK,
 				message: USER_CONST.OPERATION_SUCCESS,
