@@ -6,13 +6,14 @@ import {
 	OnGatewayConnection,
 	OnGatewayDisconnect,
 } from '@nestjs/websockets';
-import { Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 
 import { RoomServer } from './room/room.server';
 
 const roomServer = new RoomServer();
 
+@Injectable()
 @WebSocketGateway()
 export class AppGateway
 	implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {

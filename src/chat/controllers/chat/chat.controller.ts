@@ -11,10 +11,14 @@ import { Request } from 'express';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { IChatBody, IChatResponse } from 'src/chat/chat.interface';
 import { ChatService } from 'src/chat/services/chat/chat.service';
+import { AppGateway } from '../../../app.gateway';
 
 @Controller('chat')
 export class ChatController {
-	constructor(private chatService: ChatService) {}
+	constructor(
+		private chatService: ChatService,
+		private webSocket: AppGateway
+	) {}
 
 	@UseGuards(AuthGuard)
 	@Post()
@@ -22,7 +26,11 @@ export class ChatController {
 		@Body() body: IChatBody,
 		@Req() req: Request
 	): Promise<IChatResponse> {
-		return this.chatService.addMessage(body, (req as any).userId);
+		return this.chatService.addMessage(
+			body,
+			(req as any).userId,
+			this.webSocket
+		);
 	}
 
 	@UseGuards(AuthGuard)

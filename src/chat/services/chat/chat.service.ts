@@ -12,8 +12,15 @@ export class ChatService {
 		private userService: UserService
 	) {}
 
-	async addMessage(body: IChatBody, userId: string): Promise<IChatResponse> {
+	async addMessage(
+		body: IChatBody,
+		userId: string,
+		socket: any
+	): Promise<IChatResponse> {
 		const message = await this.chatRepository.addMessage(body, userId);
+
+		socket.server.emit('chatMessage', message);
+
 		return {
 			content: message.content,
 			to: message.to,
