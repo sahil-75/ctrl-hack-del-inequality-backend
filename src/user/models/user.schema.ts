@@ -26,6 +26,12 @@ export class User {
 
 	@Prop()
 	isInBreakRoom?: boolean;
+
+	@Prop()
+	isInBreakMode?: boolean;
+
+	@Prop()
+	delegatee?: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

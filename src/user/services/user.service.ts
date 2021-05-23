@@ -112,6 +112,12 @@ export class UserService {
 			return all;
 		}, {} as IUpdateUser);
 		try {
+			if (updates.delegatee) {
+				const dele = await this.userRepository.findUserByEmailNonLean(
+					updates.delegatee
+				);
+				updates.delegatee = dele.id;
+			}
 			await this.userRepository.updateOneByID(id, updates);
 		} catch (err) {
 			console.error(err);

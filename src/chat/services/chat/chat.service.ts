@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { Aggregate } from 'mongoose';
 import { IChatBody, IChatResponse } from 'src/chat/chat.interface';
 import { ChatRepository } from 'src/chat/repositories/chat/chat.repository';
@@ -17,6 +17,31 @@ export class ChatService {
 		userId: string,
 		socket: any
 	): Promise<IChatResponse> {
+		const user = await this.userService.getUserById(userId);
+		const toDetails = await this.userService.getUserById(body.to);
+		if (!toDetails) {
+			throw new BadRequestException('User Not Found!');
+		}
+
+		if (body.toDelegatee) {
+			if (!user.delegatee) {
+				throw new BadRequestException('No Delegatee for user found!');
+			}
+			return this.addMessage(
+				{
+					content: body.content,
+					to: user.delegatee,
+					accessToken: body.accessToken,
+				},
+				userId,
+				socket
+			);
+		}
+
+		if (toDetails.isInBreakMode && !body.isUrgent) {
+			throw new BadRequestException('User In Break Mode');
+		}
+
 		const message = await this.chatRepository.addMessage(body, userId);
 
 		socket.server.emit('chatMessage', message);
@@ -26,6 +51,7 @@ export class ChatService {
 			to: message.to,
 			from: message.from,
 			timestamp: message.timestamp,
+			toEmail: toDetails.email,
 		};
 	}
 

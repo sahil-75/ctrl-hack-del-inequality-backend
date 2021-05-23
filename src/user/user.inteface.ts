@@ -41,4 +41,5 @@ export interface IUpdateUser {
 	isInBreakRoom?: boolean;
 	totalBreaktime?: number;
 	accessToken: string;
+	delegatee?: string;
 }
